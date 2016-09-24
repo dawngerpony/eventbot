@@ -3,6 +3,13 @@ eventbot
 
 A Slack bot providing useful integration with Eventbrite.
 
+
+Build and run
+-------------
+
+	heroku local web
+
+
 References
 ----------
 
