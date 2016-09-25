@@ -1,25 +1,32 @@
-from flask import Flask
-
 import logging
 import os
 import time
-import threading
+
+from jinja2 import Template
+from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
 
-# starterbot's ID as an environment variable
-BOT_ID = os.environ.get('BOT_ID', 'UNKNOWN_BOT_ID')
+from eventbrite_client import ebclient
+
+# The bot's ID as an environment variable
+BOT_ID = os.environ.get('BOT_ID', 'BOT_ID')
+SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', 'SLACK_BOT_TOKEN')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
 EXAMPLE_COMMAND = "do"
 EVENTS_COMMAND = 'events'
 
-# instantiate Slack & Twilio clients
-slack_client = SlackClient(os.environ.get('SLACK_BOT_TOKEN', 'UNKNOWN_SLACK_BOT_TOKEN'))
+READ_WEB_SOCKET_DELAY = 1  # 1 second delay between reading from firehose
+
+# instantiate the Slack and Eventbrite clients
+slack_client = SlackClient(SLACK_BOT_TOKEN)
+
+env = Environment(loader=PackageLoader('eventbot', 'templates'))
+
 
 def handle_command(command, channel):
-    """
-        Receives commands directed at the bot and determines if they
+    """ Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
@@ -28,15 +35,31 @@ def handle_command(command, channel):
     if command.startswith(EXAMPLE_COMMAND):
         response = "Sure...write some more code then I can do that!"
     elif command.startswith(EVENTS_COMMAND):
-        response = "I'll show you some events in a minute!"
+        if command.startswith(EVENTS_COMMAND + " list"):
+            response = handle_events_list()
 
-    slack_client.api_call("chat.postMessage", channel=channel,
-                          text=response, as_user=True)
+    slack_client.api_call("chat.postMessage",
+                          channel=channel,
+                          text=response,
+                          as_user=True,
+                          unfurl_links=False
+    )
+
+
+def handle_events_list():
+    """ Handle the 'events list' command.
+    """
+    snippets = ebclient.get_event_snippets()
+    event_names = [e['name'] for e in snippets]
+    # template = Template("*Live events:*\n{{ names }}")
+    template = env.get_template('events_list.md')
+    response = template.render(names=event_names)
+    # response = "*Live events:*\n{}".format("\n".join(event_names))
+    return response
 
 
 def parse_slack_output(slack_rtm_output):
-    """
-        The Slack Real Time Messaging API is an events firehose.
+    """ The Slack Real Time Messaging API is an events firehose.
         this parsing function returns None unless a message is
         directed at the Bot, based on its ID.
     """
@@ -49,19 +72,19 @@ def parse_slack_output(slack_rtm_output):
                        output['channel']
     return None, None
 
-def run_bot():
-    logging.basicConfig()
-    logging.info("run_bot")
-    READ_WEBSOCKET_DELAY = 1 # 1 second delay between reading from firehose
+
+def run():
+    log = logging.getLogger(__name__)
     if slack_client.rtm_connect():
-        print("eventbot connected and running!")
+        log.info("eventbot is connected and running!")
         while True:
             command, channel = parse_slack_output(slack_client.rtm_read())
             if command and channel:
                 handle_command(command, channel)
-            time.sleep(READ_WEBSOCKET_DELAY)
+            time.sleep(READ_WEB_SOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
 
 if __name__ == "__main__":
-    run_bot()
+    logging.basicConfig(level=logging.INFO)
+    run()

@@ -1,9 +1,12 @@
 SHELL := /bin/bash
-VIRTUAL_ENV = $
 
 # run locally using heroku
 heroku-local:
-	heroku local dev
+	heroku local web
 
 deploy:
 	git push heroku master
+
+test:
+	export `heroku config -s`
+	nose2
