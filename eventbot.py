@@ -2,7 +2,6 @@ import logging
 import os
 import time
 
-from jinja2 import Template
 from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
 
@@ -14,7 +13,7 @@ SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', 'SLACK_BOT_TOKEN')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-EXAMPLE_COMMAND = "do"
+HELP_COMMAND = "help"
 EVENTS_COMMAND = 'events'
 
 READ_WEB_SOCKET_DELAY = 1  # 1 second delay between reading from firehose
@@ -24,19 +23,22 @@ slack_client = SlackClient(SLACK_BOT_TOKEN)
 
 env = Environment(loader=PackageLoader('eventbot', 'templates'))
 
+SUPPORTED_COMMANDS = [
+    {'name': 'events', 'description': 'list currently live events' },
+    {'name': 'help', 'description': 'get help' }
+]
 
 def handle_command(command, channel):
     """ Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Not sure what you mean. Use the *" + EXAMPLE_COMMAND + \
-               "* command with numbers, delimited by spaces."
-    if command.startswith(EXAMPLE_COMMAND):
+    response = "Not sure what you mean. Use the *" + HELP_COMMAND + \
+               "* command for more information."
+    if command.startswith(HELP_COMMAND):
         response = "Sure...write some more code then I can do that!"
     elif command.startswith(EVENTS_COMMAND):
-        if command.startswith(EVENTS_COMMAND + " list"):
-            response = handle_events_list()
+        response = handle_events_list_command()
 
     slack_client.api_call("chat.postMessage",
                           channel=channel,
@@ -46,7 +48,11 @@ def handle_command(command, channel):
     )
 
 
-def handle_events_list():
+def handle_help_command():
+    template = env.get_template('events_list.md')
+    response = template.render(commands=SUPPORTED_COMMANDS)
+
+def handle_events_list_command():
     """ Handle the 'events list' command.
     """
     snippets = ebclient.get_event_snippets()

@@ -4,7 +4,7 @@ SHELL := /bin/bash
 heroku-local:
 	heroku local web
 
-deploy:
+deploy: test
 	git push heroku master
 
 test:
