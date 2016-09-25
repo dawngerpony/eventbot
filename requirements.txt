@@ -2,3 +2,4 @@ slackclient==1.0.2
 eventbrite==3.3.3
 Jinja2==2.8
 nose2==0.6.5
+simplejson==3.8.2
