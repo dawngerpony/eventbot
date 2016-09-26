@@ -1,7 +1,6 @@
 Available commands:
 {% for command in commands %}
-* *{{ command.* - show this help
-* *events* - list currently live events
+• *{{ command.name }}* - {{ command.description }}
 {% endfor %}
 
 More features coming soon!

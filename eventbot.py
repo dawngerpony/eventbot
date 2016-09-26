@@ -28,6 +28,7 @@ SUPPORTED_COMMANDS = [
     {'name': 'help', 'description': 'get help' }
 ]
 
+
 def handle_command(command, channel):
     """ Receives commands directed at the bot and determines if they
         are valid commands. If so, then acts on the commands. If not,
@@ -36,7 +37,7 @@ def handle_command(command, channel):
     response = "Not sure what you mean. Use the *" + HELP_COMMAND + \
                "* command for more information."
     if command.startswith(HELP_COMMAND):
-        response = "Sure...write some more code then I can do that!"
+        response = handle_help_command()
     elif command.startswith(EVENTS_COMMAND):
         response = handle_events_list_command()
 
@@ -49,8 +50,10 @@ def handle_command(command, channel):
 
 
 def handle_help_command():
-    template = env.get_template('events_list.md')
+    template = env.get_template('help.md')
     response = template.render(commands=SUPPORTED_COMMANDS)
+    return response
+
 
 def handle_events_list_command():
     """ Handle the 'events list' command.
