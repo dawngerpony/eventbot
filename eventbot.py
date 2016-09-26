@@ -24,8 +24,8 @@ slack_client = SlackClient(SLACK_BOT_TOKEN)
 env = Environment(loader=PackageLoader('eventbot', 'templates'))
 
 SUPPORTED_COMMANDS = [
-    {'name': 'events', 'description': 'list currently live events' },
-    {'name': 'help', 'description': 'get help' }
+    {'name': 'events', 'description': 'list currently live events'},
+    {'name': 'help', 'description': 'get help'}
 ]
 
 
@@ -39,14 +39,14 @@ def handle_command(command, channel):
     if command.startswith(HELP_COMMAND):
         response = handle_help_command()
     elif command.startswith(EVENTS_COMMAND):
-        response = handle_events_list_command()
+        response = handle_events_command()
 
     slack_client.api_call("chat.postMessage",
                           channel=channel,
                           text=response,
                           as_user=True,
                           unfurl_links=False
-    )
+                          )
 
 
 def handle_help_command():
@@ -55,15 +55,12 @@ def handle_help_command():
     return response
 
 
-def handle_events_list_command():
-    """ Handle the 'events list' command.
+def handle_events_command(eventbrite_client=ebclient):
+    """ Handle the 'events' command.
     """
-    snippets = ebclient.get_event_snippets()
-    event_names = [e['name'] for e in snippets]
-    # template = Template("*Live events:*\n{{ names }}")
+    snippets = eventbrite_client.get_event_snippets()
     template = env.get_template('events_list.md')
-    response = template.render(names=event_names)
-    # response = "*Live events:*\n{}".format("\n".join(event_names))
+    response = template.render(events=snippets)
     return response
 
 
@@ -93,6 +90,7 @@ def run():
             time.sleep(READ_WEB_SOCKET_DELAY)
     else:
         print("Connection failed. Invalid Slack token or bot ID?")
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

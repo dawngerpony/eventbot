@@ -9,4 +9,4 @@ deploy: test
 
 test:
 	export `heroku config -s`
-	nose2
+	nose2 --verbose
