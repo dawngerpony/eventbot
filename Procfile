@@ -1,1 +1,1 @@
-web: python -u eventbot.py
+bot: python -u eventbot.py
