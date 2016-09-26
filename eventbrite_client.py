@@ -31,7 +31,6 @@ class EventbriteFacade:
             self.client = eventbrite_client_lib
 
     def get_event_snippets(self, statuses=['live']):
-        print(type(self.client))
         user_events = self.client.get_user_events(id='me')
         user_events_snippets = [
             {

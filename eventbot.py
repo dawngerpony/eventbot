@@ -89,7 +89,7 @@ def run():
                 handle_command(command, channel)
             time.sleep(READ_WEB_SOCKET_DELAY)
     else:
-        print("Connection failed. Invalid Slack token or bot ID?")
+        log.info("Connection failed. Invalid Slack token or bot ID?")
 
 
 if __name__ == "__main__":
