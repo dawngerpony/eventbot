@@ -4,7 +4,7 @@ import time
 
 from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
-
+from threading import Timer
 from eventbrite_client import ebclient
 
 # The bot's ID as an environment variable
@@ -81,6 +81,7 @@ def parse_slack_output(slack_rtm_output):
 
 def run():
     log = logging.getLogger(__name__)
+    # Timer(30, report_event_stats).start()
     if slack_client.rtm_connect():
         log.info("eventbot is connected and running!")
         while True:
@@ -91,6 +92,22 @@ def run():
     else:
         log.info("Connection failed. Invalid Slack token or bot ID?")
 
+
+def report_event_stats():
+    log = logging.getLogger(__name__)
+    if slack_client.rtm_connect():
+        log.info("eventbot is connected and running!")
+        response = handle_events_command()
+        channels = ['eventbot-test', 'general']
+        for channel in channels:
+            slack_client.api_call("chat.postMessage",
+                                  channel=channel,
+                                  text=response,
+                                  as_user=True,
+                                  unfurl_links=False
+                                  )
+    else:
+        log.error("Connection failed. Invalid Slack token or bot ID?")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
