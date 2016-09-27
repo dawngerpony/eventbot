@@ -4,8 +4,7 @@ import time
 
 from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
-from threading import Timer
-from eventbrite_client import ebclient
+from eventbrite_client import get_event_snippets
 
 # The bot's ID as an environment variable
 BOT_ID = os.environ.get('BOT_ID', 'BOT_ID')
@@ -55,10 +54,10 @@ def handle_help_command():
     return response
 
 
-def handle_events_command(eventbrite_client=ebclient):
+def handle_events_command():
     """ Handle the 'events' command.
     """
-    snippets = eventbrite_client.get_event_snippets()
+    snippets = get_event_snippets()
     template = env.get_template('events_list.md')
     response = template.render(events=snippets)
     return response
