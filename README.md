@@ -1,7 +1,9 @@
 eventbot
 ========
 
-A Slack bot providing useful integration with Eventbrite.
+A Slack bot written in Python providing useful integration with Eventbrite.
+
+[![CircleCI](https://circleci.com/gh/duffj/eventbot.svg?style=svg)](https://circleci.com/gh/duffj/eventbot)
 
 
 Prerequisities
