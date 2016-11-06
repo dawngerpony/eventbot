@@ -4,7 +4,7 @@ import time
 
 from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
-from eventbrite_client import get_event_snippets
+from eventbrite_fetcher import get_event_snippets
 
 # The bot's ID as an environment variable
 BOT_ID = os.environ.get('BOT_ID', 'BOT_ID')

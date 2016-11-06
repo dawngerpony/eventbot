@@ -17,24 +17,37 @@ Prerequisities
 Build and run
 -------------
 
+The app runs in Heroku, and is also built on commit by CircleCI.
+
+To view status:
+
+    heroku login
+    heroku status
+
 For local dev:
 
     make heroku-local
 
 To deploy to Heroku:
 
+    heroku login
     make deploy
+
+To run the tests:
+
+    . .venv/bin/activate
+    make test
 
 
 Features
 --------
 
-Not much yet.
-
+* Runs in Heroku
+* `@eventbot help`
+* `@eventbot events` - list currently live events
 
 ### Backlog
 
-1. Deploy to Heroku.
 1. Logging via `python eventbot.py`.
 1. Logging via `flask run`
 1. Display stats from Eventbrite.
@@ -45,6 +58,7 @@ Not much yet.
 References
 ----------
 
+* [Eventbrite APIv3 Developer Documentation](https://www.eventbrite.com/developer/v3/)
 * https://www.fullstackpython.com/blog/build-first-slack-bot-python.html
 * https://blog.heroku.com/how-to-deploy-your-slack-bots-to-heroku
 * http://flask.pocoo.org/docs/0.11/quickstart/
