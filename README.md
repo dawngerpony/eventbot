@@ -17,7 +17,7 @@ Prerequisities
 How to - build and run
 ----------------------
 
-The app runs in Heroku, and is also built on commit by CircleCI.
+The app runs in Heroku, and is also built on commit by [CircleCI](https://circleci.com/gh/duffj/eventbot).
 
 To run eventbot-jr for testing:
 
@@ -45,6 +45,12 @@ To run the tests:
     . .venv/bin/activate
     make test
 
+
+Useful Information
+------------------
+
+* The CircleCI build uses a couple of environment variables to allow the integration tests to run successfully
+against the Eventbrite API.
 
 Features
 --------
