@@ -24,20 +24,20 @@ def __calculate_quantity_sold(ticket_classes):
     return sum([int(tc['quantity_sold']) for tc in ticket_classes])
 
 
-def get_event_snippets(statuses=['live'], client=None):
+def get_event_snippets(statuses=['live']):
     """ Generate a set of 'snippets' for all the user's events for a
         set of status values (defaults to 'live' events).
     """
-    client = eventbrite_sdk_client if client is None else client
     snippets = []
-    user_events = get_user_owned_events(statuses=statuses, client=client)
+    user_events = get_user_owned_events()
     for e in [e for e in user_events['events'] if e['status'] in statuses]:
-        ticket_classes = client.get_event_ticket_classes(event_id=e['id'])
+        ticket_classes = eventbrite_sdk_client.get_event_ticket_classes(event_id=e['id'])
         snippets.append(
             {
                 'name': e['name']['text'],
                 'id': e['id'],
                 'status': e['status'],
+                'start': e['start'],
                 'days_remaining': __calculate_days_remaining(e),
                 'quantity_sold': __calculate_quantity_sold(ticket_classes['ticket_classes']),
                 'capacity': e['capacity']

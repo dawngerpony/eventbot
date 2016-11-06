@@ -1,3 +1,4 @@
+import eventbrite_reporter
 import logging
 import os
 import time
@@ -12,8 +13,10 @@ SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', 'SLACK_BOT_TOKEN')
 
 # constants
 AT_BOT = "<@" + BOT_ID + ">"
-HELP_COMMAND = "help"
-EVENTS_COMMAND = 'events'
+
+HELP_CMD = "help"
+EVENTS_CMD = 'events'
+ATTENDEES_CMD = 'attendees'
 
 READ_WEB_SOCKET_DELAY = 1  # 1 second delay between reading from firehose
 
@@ -23,8 +26,9 @@ slack_client = SlackClient(SLACK_BOT_TOKEN)
 env = Environment(loader=PackageLoader('eventbot', 'templates'))
 
 SUPPORTED_COMMANDS = [
-    {'name': 'events', 'description': 'list currently live events'},
-    {'name': 'help', 'description': 'get help'}
+    {'name': EVENTS_CMD,    'description': 'list currently live events'},
+    {'name': ATTENDEES_CMD, 'description': 'list attendees for the soonest event'},
+    {'name': HELP_CMD,      'description': 'get help'}
 ]
 
 
@@ -33,12 +37,14 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    response = "Not sure what you mean. Use the *" + HELP_COMMAND + \
+    response = "Not sure what you mean. Use the *" + HELP_CMD + \
                "* command for more information."
-    if command.startswith(HELP_COMMAND):
+    if command.startswith(HELP_CMD):
         response = handle_help_command()
-    elif command.startswith(EVENTS_COMMAND):
+    elif command.startswith(EVENTS_CMD):
         response = handle_events_command()
+    elif command.startswith(ATTENDEES_CMD):
+        response = handle_attendees_command()
 
     slack_client.api_call("chat.postMessage",
                           channel=channel,
@@ -59,8 +65,19 @@ def handle_events_command():
     """
     snippets = get_event_snippets()
     template = env.get_template('events_list.md')
-    response = template.render(events=snippets)
-    return response
+    response_text = template.render(events=snippets)
+    return response_text
+
+
+def handle_attendees_command():
+    """ Handle the 'attendees' command.
+    """
+    snippets = get_event_snippets()
+    template = env.get_template('attendees_list.md')
+    event_id = snippets[0]['id']
+    attendees = eventbrite_reporter.get_event_attendee_snippets(event_id)
+    response_text = template.render(event=snippets[0], attendees=attendees)
+    return response_text
 
 
 def parse_slack_output(slack_rtm_output):
@@ -80,7 +97,6 @@ def parse_slack_output(slack_rtm_output):
 
 def run():
     log = logging.getLogger(__name__)
-    # Timer(30, report_event_stats).start()
     if slack_client.rtm_connect():
         log.info("eventbot is connected and running!")
         while True:
@@ -91,22 +107,6 @@ def run():
     else:
         log.info("Connection failed. Invalid Slack token or bot ID?")
 
-
-def report_event_stats():
-    log = logging.getLogger(__name__)
-    if slack_client.rtm_connect():
-        log.info("eventbot is connected and running!")
-        response = handle_events_command()
-        channels = ['eventbot-test', 'general']
-        for channel in channels:
-            slack_client.api_call("chat.postMessage",
-                                  channel=channel,
-                                  text=response,
-                                  as_user=True,
-                                  unfurl_links=False
-                                  )
-    else:
-        log.error("Connection failed. Invalid Slack token or bot ID?")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)

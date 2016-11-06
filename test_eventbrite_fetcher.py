@@ -1,5 +1,4 @@
 import eventbrite_fetcher
-import simplejson
 
 
 def test_calculate_days_remaining_from_fixed_date():

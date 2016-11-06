@@ -14,10 +14,17 @@ Prerequisities
 * GNU make, for installing stuff
 
 
-Build and run
--------------
+How to - build and run
+----------------------
 
 The app runs in Heroku, and is also built on commit by CircleCI.
+
+To run eventbot-jr for testing:
+
+1. Make sure `.env` contains the test configuration.
+1. Run the bot locally:
+
+        make heroku-local
 
 To view status:
 

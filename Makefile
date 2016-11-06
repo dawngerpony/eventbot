@@ -2,7 +2,7 @@ SHELL := /bin/bash
 
 # run locally using heroku
 heroku-local:
-	heroku local web
+	heroku local bot
 
 deploy: test
 	git push heroku master
