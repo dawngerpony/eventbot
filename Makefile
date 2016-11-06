@@ -10,3 +10,6 @@ deploy: test
 test:
 	export `heroku config -s`
 	nose2 --verbose
+
+report_event_stats:
+	heroku local report_event_stats
