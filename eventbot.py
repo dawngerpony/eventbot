@@ -1,27 +1,25 @@
 import eventbrite_reporter
 import logging
-import os
+import settings
 import time
 
 from jinja2 import Environment, PackageLoader
 from slackclient import SlackClient
 from eventbrite_fetcher import get_event_snippets
 
-# The bot's ID as an environment variable
-BOT_ID = os.environ.get('BOT_ID', 'BOT_ID')
-SLACK_BOT_TOKEN = os.environ.get('SLACK_BOT_TOKEN', 'SLACK_BOT_TOKEN')
-
 # constants
-AT_BOT = "<@" + BOT_ID + ">"
+AT_BOT = "<@" + settings.BOT_ID + ">"
 
-HELP_CMD = "help"
+HELP_CMD = 'help'
 EVENTS_CMD = 'events'
 ATTENDEES_CMD = 'attendees'
 
 READ_WEB_SOCKET_DELAY = 1  # 1 second delay between reading from firehose
 
+log = logging.getLogger(__name__)
+
 # instantiate the Slack and Eventbrite clients
-slack_client = SlackClient(SLACK_BOT_TOKEN)
+slack_client = SlackClient(settings.SLACK_BOT_TOKEN)
 
 env = Environment(loader=PackageLoader('eventbot', 'templates'))
 
@@ -60,10 +58,14 @@ def handle_help_command():
     return response
 
 
-def handle_events_command():
+def handle_events_command(silent_if_none=False):
     """ Handle the 'events' command.
     """
     snippets = get_event_snippets()
+    if silent_if_none and len(snippets) == 0:
+        return ""
+    if not silent_if_none and len(snippets) == 0:
+        return "There are no live events."
     template = env.get_template('events_list.md')
     response_text = template.render(events=snippets)
     return response_text
@@ -95,8 +97,27 @@ def parse_slack_output(slack_rtm_output):
     return None, None
 
 
+def post_message(message, channels):
+    if message == '':
+        log.info("No message to send.")
+    elif slack_client.rtm_connect():
+        log.info("eventbot is connected and running.")
+        log.info("Posting message '{}' into channels '{}'".format(message, ', '.join(channels)))
+        for channel in channels:
+            slack_client.api_call(
+                "chat.postMessage",
+                channel=channel,
+                text=message,
+                as_user=True,
+                unfurl_links=False
+            )
+    else:
+        error_msg = "Connection failed. Invalid Slack token or bot ID?"
+        log.error(error_msg)
+        raise Exception(error_msg)
+
+
 def run():
-    log = logging.getLogger(__name__)
     if slack_client.rtm_connect():
         log.info("eventbot is connected and running!")
         while True:
